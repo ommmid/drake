@@ -10,6 +10,11 @@
 #include "drake/systems/framework/diagram.h"
 #include "drake/systems/framework/diagram_builder.h"
 
+#include "drake/common/drake_path.h"
+
+#include <iostream>
+#include <fstream>
+
 namespace drake {
 namespace examples {
 namespace acrobot {
@@ -28,13 +33,23 @@ DEFINE_double(realtime_factor, 1.0,
               "Playback speed.  See documentation for "
               "Simulator::set_target_realtime_rate() for details.");
 
+
 int do_main() {
+
   systems::DiagramBuilder<double> builder;
+  
+  // BLOCK: acrobot plant
   auto acrobot = builder.AddSystem<AcrobotPlant>();
   acrobot->set_name("acrobot");
+  
+  // BLOCK: scene graph
   auto scene_graph = builder.AddSystem<geometry::SceneGraph>();
+  
+  // BLOCK: acrobot geometry
   AcrobotGeometry::AddToBuilder(
       &builder, acrobot->get_output_port(0), scene_graph);
+  
+  // visualizer
   geometry::DrakeVisualizerd::AddToBuilder(&builder, *scene_graph);
 
   auto controller = builder.AddSystem(BalancingLQRController(*acrobot));
@@ -47,6 +62,11 @@ int do_main() {
   systems::Context<double>& acrobot_context =
       diagram->GetMutableSubsystemContext(*acrobot,
                                           &simulator.get_mutable_context());
+
+  const std::string drawing = diagram->GetGraphvizString();
+  bool res = drake::writeDot(drawing);
+  drake::log()->info("res: {}", res);
+
 
   // Set an initial condition near the upright fixed point.
   AcrobotState<double>* x0 = dynamic_cast<AcrobotState<double>*>(

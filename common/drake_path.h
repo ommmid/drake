@@ -2,6 +2,8 @@
 
 #include <optional>
 #include <string>
+#include <iostream>
+#include <fstream>
 
 namespace drake {
 
@@ -14,5 +16,7 @@ namespace drake {
 /// Drake resources for a specific resource filename.  This method only exists
 /// for legacy compatibility reasons, and might eventually be removed.
 std::optional<std::string> MaybeGetDrakePath();
+
+bool writeDot(std::string input_str, std::string output_path="/home/omid/test_dir/diagram.dot");
 
 }  // namespace drake

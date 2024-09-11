@@ -242,6 +242,7 @@ drake_cc_binary(
         "//systems/analysis:simulator",
         "@gflags",
     ],
+    copts = ["-Wno-unused-variable"]
 )
 
 drake_cc_binary(

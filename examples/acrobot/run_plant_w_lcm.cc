@@ -27,6 +27,8 @@
 #include "drake/systems/lcm/lcm_publisher_system.h"
 #include "drake/systems/lcm/lcm_subscriber_system.h"
 
+#include "drake/common/drake_path.h"
+
 DEFINE_double(simulation_sec, std::numeric_limits<double>::infinity(),
               "Number of seconds to simulate.");
 DEFINE_double(realtime_factor, 1.0,
@@ -58,6 +60,8 @@ int DoMain() {
   // Creates command receiver and subscriber.
   auto command_sub = builder.AddSystem(
       systems::lcm::LcmSubscriberSystem::Make<lcmt_acrobot_u>(channel_u, lcm));
+
+    // receiver gets the output from subscriber to lcm and outputs it as BasicVector
   auto command_receiver = builder.AddSystem<AcrobotCommandReceiver>();
   builder.Connect(command_sub->get_output_port(),
                   command_receiver->get_input_port(0));
@@ -75,6 +79,10 @@ int DoMain() {
   builder.Connect(acrobot->get_output_port(0), state_sender->get_input_port(0));
 
   auto diagram = builder.Build();
+    const std::string drawing = diagram->GetGraphvizString();
+    bool res = drake::writeDot(drawing, "/home/omid/test_dir/acrobot_lcm.dot");
+    drake::log()->info("res: {}", res);
+
   systems::Simulator<double> simulator(*diagram);
 
   // Sets an initial condition near the stable fixed point.

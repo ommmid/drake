@@ -12,6 +12,7 @@
 #include "drake/systems/framework/diagram_builder.h"
 #include "drake/systems/primitives/vector_log_sink.h"
 
+
 using drake::examples::acrobot::AcrobotParams;
 using drake::examples::acrobot::AcrobotPlant;
 using drake::examples::acrobot::AcrobotSpongController;
@@ -25,11 +26,13 @@ namespace examples {
 namespace acrobot {
 namespace {
 
+
 DEFINE_string(scenario, "", "Scenario file to load (required).");
 DEFINE_string(dump_scenario, "", "Scenario file to save.");
 DEFINE_string(output, "", "Output file to save (required).");
 DEFINE_int32(random_seed, drake::RandomGenerator::default_seed,
              "Random seed");
+
 
 // The YAML format for --scenario.
 struct Scenario {
@@ -94,6 +97,7 @@ Output Simulate(const Scenario& stochastic_scenario) {
                                       scenario.tape_period);
 
   auto diagram = builder.Build();
+
   Simulator<double> simulator(*diagram);
   auto& context = simulator.get_mutable_context();
 

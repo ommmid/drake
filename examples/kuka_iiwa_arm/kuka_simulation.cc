@@ -30,6 +30,8 @@
 #include "drake/systems/primitives/discrete_derivative.h"
 #include "drake/visualization/visualization_config_functions.h"
 
+#include "drake/common/drake_path.h"
+
 DEFINE_double(simulation_sec, std::numeric_limits<double>::infinity(),
               "Number of seconds to simulate.");
 DEFINE_string(urdf, "", "Name of urdf to load");
@@ -167,6 +169,11 @@ int DoMain() {
   }
 
   auto sys = builder.Build();
+
+  const std::string drawing = sys->GetGraphvizString();
+  bool res = drake::writeDot(drawing, "/home/omid/test_dir/kuka.dot");
+  drake::log()->info("res: {}", res);
+
 
   Simulator<double> simulator(*sys);
 

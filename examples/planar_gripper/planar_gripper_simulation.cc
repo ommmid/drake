@@ -69,6 +69,8 @@
 #include "drake/systems/lcm/lcm_publisher_system.h"
 #include "drake/systems/lcm/lcm_subscriber_system.h"
 
+#include "drake/common/drake_path.h"
+
 namespace drake {
 namespace examples {
 namespace planar_gripper {
@@ -289,6 +291,12 @@ int DoMain() {
   plant.mutable_gravity_field().set_gravity_vector(gravity);
   control_plant.mutable_gravity_field().set_gravity_vector(gravity);
 
+    // Omid: lcminterfacesystem updates data revieved over LCM. Then
+    // subscirbers can get the latest data. So you have to make 
+    // this interface first if you want to have any subscriber 
+    // to any data comming from simultion. 
+    // systems::lcm::LcmInterfaceSystem is the interface to simulation
+
   systems::lcm::LcmInterfaceSystem* lcm =
       builder.AddSystem<systems::lcm::LcmInterfaceSystem>();
 
@@ -359,6 +367,8 @@ int DoMain() {
                   status_pub->get_input_port());
 
   auto diagram = builder.Build();
+
+    drake::writeDot(diagram->GetGraphvizString(), "/home/omid/test_dir/diagrap_gripper.dot");
 
   // Extract the initial gripper and brick poses by parsing the keyframe file.
   // The brick's pose consists of {y_position, z_position, x_rotation_angle}.

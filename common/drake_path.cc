@@ -23,4 +23,16 @@ std::optional<std::string> MaybeGetDrakePath() {
   return sentinel_path.parent_path().string();
 }
 
+bool writeDot(std::string input_str, std::string output_path){
+  std::ofstream dotFile(output_path);
+    if (!dotFile.is_open()) {
+        std::cerr << "Error opening file!" << std::endl;
+        return false;
+    }
+    dotFile << input_str;
+    dotFile.close();
+    return true;
+}
+
+
 }  // namespace drake

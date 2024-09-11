@@ -54,4 +54,43 @@ drake_cc_binary(
     ],
 )
 
+drake_cc_library(
+    name = "fb_cancellation_controller",
+    hdrs = ["fb_cancellation_controller.h"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//common:default_scalars",
+        "//math:wrap_to",
+        "//systems/controllers:linear_quadratic_regulator",
+        "//systems/framework:leaf_system",
+        "//systems/framework:vector",
+        "//systems/primitives:linear_system",
+    ],
+    # copts = ["-Wno-unused-variable", "-Wno-unused-parameter"], 
+    # if you want to pass to the command line:
+    # bazel build --copt="-Wno-unused-parameter" //examples/multibody/acrobot:run_fb_cancellation
+)
+
+drake_cc_binary(
+    name = "run_fb_cancellation",
+    srcs = ["run_fb_cancellation.cc"],
+    data = ["//multibody/benchmarks/acrobot:models"],    
+    deps = [
+        ":fb_cancellation_controller",
+        "//common:add_text_logging_gflags",
+        "//geometry:drake_visualizer",
+        "//lcm",
+        "//multibody/parsing",
+        "//multibody/benchmarks/acrobot:make_acrobot_plant",
+        "//systems/analysis:implicit_euler_integrator",
+        "//systems/analysis:runge_kutta3_integrator",
+        "//systems/analysis:semi_explicit_euler_integrator",
+        "//systems/analysis:simulator",
+        "//systems/framework:diagram",
+        "//systems/primitives:constant_vector_source",
+        "//visualization:visualization_config_functions",
+        "@gflags",
+    ],
+)
+
 add_lint_tests(enable_clang_format_lint = False)

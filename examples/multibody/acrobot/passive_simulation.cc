@@ -119,6 +119,12 @@ int do_main() {
   }
   integrator->set_maximum_step_size(max_time_step);
 
+  int num_vel = acrobot.num_velocities();
+  MatrixX<double> mass_matrix(num_vel, num_vel);
+  acrobot.CalcMassMatrix(acrobot_context, &mass_matrix);
+  drake::log()->info("Mass Matrix: {}", fmt_eigen(mass_matrix));
+
+
   // Error control is only supported for variable time step integrators.
   if (!integrator->get_fixed_step_mode())
     integrator->set_target_accuracy(target_accuracy);
