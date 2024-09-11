@@ -13,6 +13,7 @@
 #include "drake/visualization/visualization_config_functions.h"
 
 #include "drake/examples/multibody/acrobot/fb_cancellation_controller.h"
+#include "drake/common/drake_path.h"
 
 namespace drake {
 
@@ -58,8 +59,8 @@ int do_main() {
   // We are done defining the model.
   acrobot.Finalize();
 
-  DRAKE_DEMAND(acrobot.num_actuators() == 1);
-  DRAKE_DEMAND(acrobot.num_actuated_dofs() == 1);
+//   DRAKE_DEMAND(acrobot.num_actuators() == 1);
+//   DRAKE_DEMAND(acrobot.num_actuated_dofs() == 1);
 
   RevoluteJoint<double>& shoulder =
       acrobot.GetMutableJointByName<RevoluteJoint>("ShoulderJoint");
@@ -84,6 +85,10 @@ int do_main() {
 
   visualization::AddDefaultVisualization(&builder);
   auto diagram = builder.Build();
+  
+  const std::string drawing = diagram->GetGraphvizString();
+  bool res = drake::writeDot(drawing, "/home/omid/test_dir/fb.dot");
+  drake::log()->info("res: {}", res);
 
   systems::Simulator<double> simulator(*diagram);
   simulator.set_target_realtime_rate(FLAGS_target_realtime_rate);

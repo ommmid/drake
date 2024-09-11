@@ -13,21 +13,15 @@ namespace examples {
 using drake::systems::BasicVector;
 using drake::systems::Context;
 
-/// The Spong acrobot swing-up controller as described in:
-///   Spong, Mark W. "Swing up control of the acrobot." Robotics and Automation,
-///   1994. Proceedings., 1994 IEEE International Conference on. IEEE, 1994.
+/// Feedback Cancellation controller. We want this acrobot act like a single pendulum.
 ///
-/// Note that the Spong controller works well on the default set of parameters,
-/// which Spong used in his paper. In contrast, it is difficult to find a
-/// functional set of gains to stabilize the robot about its upright fixed
-/// point using the parameters of the physical robot we have in lab.
 ///
 /// @system
 /// name: FBCancellationController
 /// input_ports:
-/// - acrobot_state
+/// - joints_state
 /// output_ports:
-/// - elbow_torque
+/// - joints_torque
 /// @endsystem
 ///
 /// @ingroup acrobot_systems
@@ -35,14 +29,14 @@ template <typename T>
 class FBCancellationController : public systems::LeafSystem<T> {
  public:
   FBCancellationController(const multibody::MultibodyPlant<T>& plant)
-      : plant_(plant),
-        context_(plant_.CreateDefaultContext())
+      : plant_(plant), context_(plant_.CreateDefaultContext())
     {
     this->DeclareVectorInputPort("joints_state", 4); 
-    this->DeclareVectorOutputPort("joints_torque", 1, 
+    this->DeclareVectorOutputPort("joints_torque", 2, 
                                   &FBCancellationController<T>::CalcControlTorque);
 
-    
+    nv_ = plant_.num_velocities();
+    drake::log()->info("nv_ {}", nv_);
 
     // auto state_value =
     //   context_->get_mutable_discrete_state(0).get_mutable_value();
@@ -55,18 +49,22 @@ class FBCancellationController : public systems::LeafSystem<T> {
 
   void CalcControlTorque(const Context<T>& context, BasicVector<T>* torque) const {
 
-    // const Vector4<T> x0(M_PI, 0, 0, 0);
-    // Vector4<T> x = state.CopyToVector();
-    // // Wrap theta1 and theta2.
-    // x(0) = math::wrap_to(x(0), 0., 2. * M_PI);
-    // x(1) = math::wrap_to(x(1), -M_PI, M_PI);
-
-    // const T cost = (x - x0).dot(S_ * (x - x0));
-    // T u;
-
-    // const Matrix2<T> M = plant_.MassMatrix(*context_);
+    // the context argument of this function is the root context related to diagram, but
+    // what we want is the one realted to plant which is context_
+    Eigen::MatrixXd M(nv_, nv_);
+    plant_.CalcMassMatrix(*context_, &M);
     // const Vector2<T> bias = plant_.DynamicsBiasTerm(*context_);
     // const Matrix2<T> M_inverse = M.inverse();
+
+    Eigen::VectorX<T> tau_g = plant_.CalcGravityGeneralizedForces(*context_);
+    
+    // bias term C(q,qdot) contains: coriolis, cetripetal and gyroscopic
+    Eigen::VectorX<T> Cv;
+    plant_.CalcBiasTerm(*context_, &Cv);
+    drake::log()->info("Cv {}", fmt_eigen(Cv));
+
+
+    // Cv - tau_g + 
 
     // // controller gains
     // const T& k_e = get_parameters(context).k_e();
@@ -106,8 +104,9 @@ class FBCancellationController : public systems::LeafSystem<T> {
   const multibody::MultibodyPlant<T>& plant_;
   // The implementation above is (and must remain) careful to not store hidden
   // state in here.  This is only used to avoid runtime allocations.
-  const std::unique_ptr<Context<T>> context_;
 
+  const std::unique_ptr<Context<T>> context_;
+  int nv_;
 };
 
 }  // namespace examples
