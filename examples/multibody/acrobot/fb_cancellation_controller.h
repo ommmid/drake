@@ -38,6 +38,15 @@ class FBCancellationController : public systems::LeafSystem<T> {
     nv_ = plant_.num_velocities();
     drake::log()->info("nv_ {}", nv_);
 
+    int np_ = plant_.num_positions();
+    drake::log()->info("np_ {}", np_);
+
+    int ns_ = plant_.num_multibody_states();
+    drake::log()->info("ns_ {}", ns_);
+
+    int ndofs_ = plant_.num_actuated_dofs();
+    drake::log()->info("ndofs_ {}", ndofs_);
+
     // auto state_value =
     //   context_->get_mutable_discrete_state(0).get_mutable_value();
     
@@ -55,13 +64,15 @@ class FBCancellationController : public systems::LeafSystem<T> {
     plant_.CalcMassMatrix(*context_, &M);
     // const Vector2<T> bias = plant_.DynamicsBiasTerm(*context_);
     // const Matrix2<T> M_inverse = M.inverse();
+    drake::log()->info("M:\n{}", fmt_eigen(M));
 
     Eigen::VectorX<T> tau_g = plant_.CalcGravityGeneralizedForces(*context_);
+    drake::log()->info("tau_g:\n{}", fmt_eigen(tau_g));
     
-    // bias term C(q,qdot) contains: coriolis, cetripetal and gyroscopic
-    Eigen::VectorX<T> Cv;
+    // bias term Cv = C(q,qdot)*qdot contains: coriolis, cetripetal and gyroscopic
+    Eigen::VectorX<T> Cv(2);
     plant_.CalcBiasTerm(*context_, &Cv);
-    drake::log()->info("Cv {}", fmt_eigen(Cv));
+    drake::log()->info("Cv:\n{}", fmt_eigen(Cv));
 
 
     // Cv - tau_g + 
@@ -94,8 +105,8 @@ class FBCancellationController : public systems::LeafSystem<T> {
     // Eigen::Vector2d u(0.1,0.4);
     // torque->set_value(u);
 
-    Eigen::VectorXd val(1);
-    val << (1.0 + context.get_time() - context.get_time());
+    Eigen::VectorXd val(2);
+    val << (0.1 + context.get_time() - context.get_time()), 0.2;
     torque->set_value(val);
     // drake::log()->info("size: {}", torque->size());
   }

@@ -74,7 +74,7 @@ drake_cc_library(
 drake_cc_binary(
     name = "run_fb_cancellation",
     srcs = ["run_fb_cancellation.cc"],
-    data = ["//multibody/benchmarks/acrobot:models"],    
+    # data = ["//drake/underactuated/models/**"],
     deps = [
         ":fb_cancellation_controller",
         "//common:add_text_logging_gflags",

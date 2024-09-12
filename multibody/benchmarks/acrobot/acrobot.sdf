@@ -56,7 +56,7 @@
         <xyz expressed_in="__model__">0 1 0</xyz>
         <limit>
           <!-- Drake parses a zero effort joint as an un-actuated joint. -->
-          <effort>0.1</effort>
+          <effort>0</effort>
         </limit>
         <dynamics>
           <damping>0.1</damping>
