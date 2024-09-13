@@ -180,7 +180,7 @@ AcrobotWEncoder<T>::AcrobotWEncoder(bool acrobot_state_as_second_output) {
     builder.ExportOutput(acrobot_plant_->get_output_port(0), "acrobot_state");
 
   builder.BuildInto(this);
-}
+} 
 
 template <typename T>
 AcrobotState<T>& AcrobotWEncoder<T>::get_mutable_acrobot_state(

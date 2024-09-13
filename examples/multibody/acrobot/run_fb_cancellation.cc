@@ -12,6 +12,7 @@
 #include "drake/systems/primitives/affine_system.h"
 #include "drake/visualization/visualization_config_functions.h"
 
+#include <iostream>
 #include "drake/examples/multibody/acrobot/fb_cancellation_controller.h"
 #include "drake/common/drake_path.h"
 
@@ -35,7 +36,7 @@ DEFINE_double(target_realtime_rate, 1.0,
               "Desired rate relative to real time.  See documentation for "
               "Simulator::set_target_realtime_rate() for details.");
 
-DEFINE_double(simulation_time, 10.0,
+DEFINE_double(simulation_time, 5.0,
               "Desired duration of the simulation in seconds.");
 
 DEFINE_bool(time_stepping, true, "If 'true', the plant is modeled as a "
@@ -51,10 +52,10 @@ int do_main() {
       AddMultibodyPlantSceneGraph(&builder, time_step);
 
   // Make and add the acrobot model.
-  const std::string acrobot_url =
+  const std::string dp_underactuated_url =
       "package://drake/multibody/benchmarks/acrobot/double_pendulum_underactuated.sdf";
   Parser parser(&acrobot);
-  parser.AddModelsFromUrl(acrobot_url);
+  parser.AddModelsFromUrl(dp_underactuated_url);
 
   // weld the base of the robot to world
 //   acrobot.WeldFrames(acrobot.world_frame(), acrobot.GetFrameByName("base"));
@@ -83,26 +84,39 @@ int do_main() {
 
   visualization::AddDefaultVisualization(&builder);
   auto diagram = builder.Build();
+  auto diagram_context = diagram->CreateDefaultContext(); // unique pointer, unique_point.get() return the raw pointer
   
   const std::string drawing = diagram->GetGraphvizString();
   bool res = drake::writeDot(drawing, "/home/omid/test_dir/fb.dot");
   drake::log()->info("res: {}", res);
 
-  systems::Simulator<double> simulator(*diagram);
-  simulator.set_target_realtime_rate(FLAGS_target_realtime_rate);
-
+  
   RandomGenerator generator;
 
   // Setup distribution for random initial conditions.
   std::normal_distribution<symbolic::Expression> gaussian;
-  shoulder.set_random_angle_distribution(M_PI + 0.02*gaussian(generator));
-  elbow.set_random_angle_distribution(0.05*gaussian(generator));
+  // shoulder.set_random_angle_distribution(M_PI + 0.02*gaussian(generator));
+  // elbow.set_random_angle_distribution(0.05*gaussian(generator));
+  shoulder.set_default_angle(M_PI/2);
+  elbow.set_default_angle(M_PI/2);
 
-    simulator.get_mutable_context().SetTime(0.0);
-    simulator.Initialize();
-    simulator.AdvanceTo(FLAGS_simulation_time);
+  Context<double>& plant_context = acrobot.GetMyMutableContextFromRoot(diagram_context.get());
+  auto state =
+      plant_context.get_mutable_discrete_state(0).get_mutable_value();
+    
+  state[0] = 0.0;
+  state[1] = 0.0;
+  state[2] = 0.0;
+  state[3] = 0.0;
 
-    return 0;
+  systems::Simulator<double> simulator(*diagram);
+  simulator.set_target_realtime_rate(FLAGS_target_realtime_rate);
+
+  simulator.get_mutable_context().SetTime(0.0);
+  simulator.Initialize();
+  simulator.AdvanceTo(FLAGS_simulation_time);
+
+  return 0;
 }
 
 }  // namespace
