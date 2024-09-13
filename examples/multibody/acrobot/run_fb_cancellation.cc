@@ -52,7 +52,7 @@ int do_main() {
 
   // Make and add the acrobot model.
   const std::string acrobot_url =
-      "package://drake/multibody/benchmarks/acrobot/dbpd.sdf";
+      "package://drake/multibody/benchmarks/acrobot/double_pendulum_underactuated.sdf";
   Parser parser(&acrobot);
   parser.AddModelsFromUrl(acrobot_url);
 
@@ -61,15 +61,15 @@ int do_main() {
   acrobot.Finalize();
 
   RevoluteJoint<double>& shoulder =
-      acrobot.GetMutableJointByName<RevoluteJoint>("shaft1");
+      acrobot.GetMutableJointByName<RevoluteJoint>("shoulder");
   RevoluteJoint<double>& elbow =
-      acrobot.GetMutableJointByName<RevoluteJoint>("shaft2");
+      acrobot.GetMutableJointByName<RevoluteJoint>("elbow");
 
   // Drake's parser will default the name of the actuator to match the name of
   // the joint it actuates.
   const JointActuator<double>& actuator =
-      acrobot.GetJointActuatorByName("shaft2");
-  DRAKE_DEMAND(actuator.joint().name() == "shaft2");
+      acrobot.GetJointActuatorByName("elbow");
+  DRAKE_DEMAND(actuator.joint().name() == "elbow");
 
   // For this example the controller's model of the plant exactly matches the
   // plant to be controlled (in reality there would always be a mismatch).
