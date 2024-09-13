@@ -36,7 +36,7 @@ DEFINE_double(target_realtime_rate, 1.0,
               "Desired rate relative to real time.  See documentation for "
               "Simulator::set_target_realtime_rate() for details.");
 
-DEFINE_double(simulation_time, 5.0,
+DEFINE_double(simulation_time, 10.0,
               "Desired duration of the simulation in seconds.");
 
 DEFINE_bool(time_stepping, true, "If 'true', the plant is modeled as a "
@@ -97,17 +97,16 @@ int do_main() {
   std::normal_distribution<symbolic::Expression> gaussian;
   // shoulder.set_random_angle_distribution(M_PI + 0.02*gaussian(generator));
   // elbow.set_random_angle_distribution(0.05*gaussian(generator));
-  shoulder.set_default_angle(M_PI/2);
-  elbow.set_default_angle(M_PI/2);
+  shoulder.set_default_angle(M_PI/3);
+  elbow.set_default_angle(0.0);
 
-  Context<double>& plant_context = acrobot.GetMyMutableContextFromRoot(diagram_context.get());
-  auto state =
-      plant_context.get_mutable_discrete_state(0).get_mutable_value();
-    
-  state[0] = 0.0;
-  state[1] = 0.0;
-  state[2] = 0.0;
-  state[3] = 0.0;
+  // [OMID] I dont know why the following doe not work for setting initial state. Figure out why?
+  // Context<double>& plant_context = acrobot.GetMyMutableContextFromRoot(diagram_context.get());
+  // auto state = plant_context.get_mutable_discrete_state(0).get_mutable_value();
+  // state[0] = M_PI/4;
+  // state[1] = 2.0;
+  // state[2] = 0.0;
+  // state[3] = 0.0;
 
   systems::Simulator<double> simulator(*diagram);
   simulator.set_target_realtime_rate(FLAGS_target_realtime_rate);
