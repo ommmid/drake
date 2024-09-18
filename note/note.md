@@ -1,12 +1,20 @@
 # My Note
 
+Sampling method example
 PRM
 RRT
-TrajOpt 
+
+TrajOpt example
+directiontranscription
+directioncollocation
+trajectoryoptimiztion
+
 what can be done offline to save time in optimization problem?
 
-Manipulation 3,4,5,6,7,8
+example for
+constraint in cartesian space
 
+example
 Redundnat Manipulator
 
 ## inspecting kinematic tree
@@ -52,7 +60,7 @@ the output of the IK approach straight to the controller
 trajectory optimiztion:
     - direct transcription. discritizing the optimization problem. Usually min effort for cost
     and bunch of constraints which includes system dynamics
-    - direct collocation. uses cubic spline to reprent the path, so we can define less control points
+    - direct collocation. like direct transcription but uses cubic spline to reprent the path, so we can define less control points
     resuling in less variables. 
     `underactuated/book/trajopt/double_integrator.ipynb`
     `underactuated/book/trajopt/dircol.ipynb`
@@ -61,7 +69,14 @@ trajectory optimiztion:
     `manipulation/book/trajectories/kinematic_trajectory_optimization.ipynb`
     Drake uses B-spline which has the convex hull property to ensure that limits on the joint positions and any of its **derivatives** are satisfied. Note this is used in the optimiztion process not after calculating the path. Kinematics here does not mean that we do not set time derivative constraint but it means we do not have have the dynanmics equations in the equality constraint like DirecCallocaiton or DirectTranscription have.
 
+Collocation is an idea about gradients of a continuous trajectory. It is only a relevant idea for continuous-time systems.
+
+Direct transcription is well-defined for both discrete- and continuous- time. 
+
 The default solver would again be the SQP-solver, SNOPT.
+
+some good examples:
+https://github.com/vincekurtz/drake_ddp/blob/b4b22a55448121153f992cae453236f7f5891b23/acrobot.py#L177 
 
 ## Motion planning - sampling based
 PRM (multiple enquery): roadmap construction, offline. graph search (online)
@@ -79,3 +94,4 @@ prog.AddConstraint(x[0] <= x[1])
 prog.AddCost(x[0] ** 2 + x[1] ** 2)
 result = Solve(prog)
 ```
+

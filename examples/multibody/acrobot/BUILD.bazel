@@ -93,4 +93,29 @@ drake_cc_binary(
     ],
 )
 
+drake_cc_binary(
+    name = "direct_transcription_kuka",
+    srcs = ["direct_transcription_kuka.cc"],
+    data = ["//multibody/benchmarks/acrobot:models",
+            "@drake_models//:iiwa_description"],
+    deps = [
+        "//planning/trajectory_optimization:direct_transcription",
+        "//common:add_text_logging_gflags",
+        "//geometry:drake_visualizer",
+        "//solvers:snopt_solver",
+        "//lcm",
+        "//multibody/parsing",
+        "//multibody/benchmarks/acrobot:make_acrobot_plant",
+        "//systems/analysis:implicit_euler_integrator",
+        "//systems/analysis:runge_kutta3_integrator",
+        "//systems/analysis:semi_explicit_euler_integrator",
+        "//systems/analysis:simulator",
+        "//systems/framework:diagram",
+        "//systems/primitives:constant_vector_source",
+        "//visualization:visualization_config_functions",
+        "//systems/primitives:affine_system",
+        "@gflags",
+    ],
+)
+
 add_lint_tests(enable_clang_format_lint = False)
