@@ -60,18 +60,23 @@ the output of the IK approach straight to the controller
 trajectory optimiztion:
     - direct transcription. discritizing the optimization problem. Usually min effort for cost
     and bunch of constraints which includes system dynamics
+    not good when we need contact or collision (things from GraphScene)
+
     - direct collocation. like direct transcription but uses cubic spline to reprent the path, so we can define less control points
     resuling in less variables. 
     `underactuated/book/trajopt/double_integrator.ipynb`
     `underactuated/book/trajopt/dircol.ipynb`
+
     - kinematics trajectory optimization:
     This is an extension of prvious IK approach but we are going to solve for a handful of points not one point. This is a kinda of DirectCollocation but without dynamics
     `manipulation/book/trajectories/kinematic_trajectory_optimization.ipynb`
-    Drake uses B-spline which has the convex hull property to ensure that limits on the joint positions and any of its **derivatives** are satisfied. Note this is used in the optimiztion process not after calculating the path. Kinematics here does not mean that we do not set time derivative constraint but it means we do not have have the dynanmics equations in the equality constraint like DirecCallocaiton or DirectTranscription have.
+    Drake uses B-spline which has the convex hull property to ensure that limits on the joint positions and any of its **derivatives** are satisfied. Note this is used in the optimiztion process not after calculating the path. Kinematics here does not mean that we do not set time derivative constraint but it means we do not have the dynanmics equations in the equality constraint like DirecCallocaiton or DirectTranscription have.
 
 Collocation is an idea about gradients of a continuous trajectory. It is only a relevant idea for continuous-time systems.
 
 Direct transcription is well-defined for both discrete- and continuous- time. 
+
+Direct transcription and collocation are not suitable for contact and collision check
 
 The default solver would again be the SQP-solver, SNOPT.
 
