@@ -33,8 +33,7 @@ crate_universe_dependencies(bootstrap = True)
 
 new_local_repository(
     name = "ompl",
+    path = "/usr",
     build_file = "//third_party:ompl.BUILD.bazel",
-    path = "/usr/include/ompl-1.5",
 )
 
-# bazel fetch @cereal//:cereal-lib

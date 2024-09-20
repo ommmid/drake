@@ -103,3 +103,5 @@ prog.AddCost(x[0] ** 2 + x[1] ** 2)
 result = Solve(prog)
 ```
 
+## BAZEL
+bazel fetch @ompl//:ompl-1.5

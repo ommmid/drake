@@ -1,6 +1,14 @@
-cc_library(
+# cc_library(
+#     name = "ompl-1.5",
+#     # srcs = glob(["**"]),
+#     hdrs = glob(["**/*.h"]),
+#     includes = ["/usr/include/ompl-1.5"], # relative to path given in new_local_repository
+#     visibility = ["//visibility:public"],
+# )
+
+cc_import(
     name = "ompl-1.5",
-    hdrs = glob(["**/*.h"]),
-    includes = ["."], # relative to path given in new_local_repository
+    shared_library = "lib/x86_64-linux-gnu/libompl.so",
+    includes = ["/usr/include/ompl-1.5"],
     visibility = ["//visibility:public"],
 )
