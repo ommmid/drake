@@ -21,6 +21,7 @@
 #include "drake/geometry/scene_graph.h"
 #include "drake/multibody/parsing/parser.h"
 #include "drake/multibody/plant/multibody_plant.h"
+#include "drake/multibody/tree/revolute_joint.h"
 #include "drake/systems/analysis/simulator.h"
 #include "drake/systems/framework/diagram.h"
 #include "drake/systems/framework/diagram_builder.h"
@@ -39,6 +40,7 @@ using drake::multibody::BodyIndex;
 using drake::multibody::ModelInstanceIndex;
 using drake::multibody::MultibodyPlant;
 using drake::multibody::Parser;
+using drake::multibody::RevoluteJoint;
 using drake::systems::Context;
 using namespace Eigen;
 namespace ob = ompl::base;
@@ -128,8 +130,6 @@ int main(int argc, char *argv[]) {
   ModelInstanceIndex bin = parser.AddModelsFromUrl("file:///home/omid/drake/note/shelves.sdf")[0];
   auto transform = RigidTransformd(drake::Vector3<double>{0.88, 0, 0.4});
   auto& shelves = plant.GetFrameByName("shelves_body", bin);
-  drake::unused(transform);
-  drake::unused(shelves);
   plant.WeldFrames( plant.world_frame(), shelves, transform);
 
   // Now the model is complete.
@@ -149,39 +149,55 @@ int main(int argc, char *argv[]) {
 
   // connect the visualizer and make the context
   drake::visualization::AddDefaultVisualization(&builder);
+  std::unique_ptr<drake::systems::Diagram<double>> diagram_ = builder.Build();
 
-  auto diagram_ = builder.Build();
-  auto diagram_context = diagram_->CreateDefaultContext();
+  // auto simulator = std::make_unique<drake::systems::Simulator<double>>(*diagram_);
+  drake::systems::Simulator<double> simulator(*diagram_);
+
+  // auto diagram_context = diagram_->CreateDefaultContext();
+  drake::systems::Context<double>& diagram_context = simulator.get_mutable_context();
   // diagram_->SetDefaultContext(diagram_context.get());
-  auto scene_context = scene_graph.AllocateContext();
-  auto output = diagram_->AllocateOutput();
+
+  // auto scene_context = scene_graph.AllocateContext();
+  // auto output = diagram_->AllocateOutput();
 
   
-  Context<double>* plant_context = &plant.GetMyMutableContextFromRoot(diagram_context.get());
+  // Context<double>* plant_context = &plant.GetMyMutableContextFromRoot(&diagram_context);
+  Context<double>& plant_context = diagram_->GetMutableSubsystemContext(plant, &diagram_context);
+  drake::unused(plant_context);
+  drake::unused(t_begin);
+
+  
 
   // initialize to a default position (may be in collision)
-  plant.SetPositions(plant_context, robot_model_idx_, start_conf);
-  diagram_->ForcedPublish(*diagram_context);
+  plant.SetPositions(&plant_context, start_conf);
 
-  // should i do it this wya???????????????
-  RevoluteJoint<double>& shoulder =
-      acrobot.GetMutableJointByName<RevoluteJoint>("shoulder");
-  RevoluteJoint<double>& elbow =
-      acrobot.GetMutableJointByName<RevoluteJoint>("elbow");
+  // OR:
+  // RevoluteJoint<double>& joint_1 = plant.GetMutableJointByName<RevoluteJoint>("iiwa_joint_1");
+  // RevoluteJoint<double>& joint_2 = plant.GetMutableJointByName<RevoluteJoint>("iiwa_joint_2");
+  // RevoluteJoint<double>& joint_3 = plant.GetMutableJointByName<RevoluteJoint>("iiwa_joint_3");
+  // RevoluteJoint<double>& joint_4 = plant.GetMutableJointByName<RevoluteJoint>("iiwa_joint_4");
+  // RevoluteJoint<double>& joint_5 = plant.GetMutableJointByName<RevoluteJoint>("iiwa_joint_5");
+  // RevoluteJoint<double>& joint_6 = plant.GetMutableJointByName<RevoluteJoint>("iiwa_joint_6");
+  // RevoluteJoint<double>& joint_7 = plant.GetMutableJointByName<RevoluteJoint>("iiwa_joint_7");
+  // joint_1.set_default_angle(start_conf[0]);
+  // joint_2.set_default_angle(start_conf[1]);
+  // joint_3.set_default_angle(start_conf[2]);
+  // joint_4.set_default_angle(start_conf[3]);
+  // joint_5.set_default_angle(start_conf[4]);
+  // joint_6.set_default_angle(start_conf[5]);
+  // joint_7.set_default_angle(start_conf[6]);
 
-  // create a simulator for visualization
-  auto simulator = std::make_unique<drake::systems::Simulator<double>>(*diagram_);
-  simulator->set_target_realtime_rate(1.0);
-  simulator->get_mutable_context().SetTime(0.0);
-  simulator->Initialize();
-  simulator->AdvanceTo(10.0);
+  diagram_->ForcedPublish(diagram_context);
+
+  // Dont run simulation here, we jut want to see the robot at the given configuration, that is it.
   // uncomment to see the robot in initial state
   while(true){
     std::this_thread::sleep_for(
             std::chrono::milliseconds(500));
   }
   return 0;
-  
+  /*
   // setup the OMPL planning problem
   // ompl::msg::noOutputHandler(); // uncomment to remove OMPL messages
 
@@ -305,4 +321,5 @@ int main(int argc, char *argv[]) {
 
   std::cerr << "Planning Complete!" << std::endl;
   return 0;
+  */
 }
