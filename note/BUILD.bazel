@@ -10,8 +10,8 @@ load(
 drake_cc_binary(
     name = "rrt",
     srcs = ["rrt.cc"],
-    # data = ["//multibody/benchmarks/acrobot:models",
-    #         "@drake_models//:iiwa_description"],
+    data = ["//multibody/benchmarks/acrobot:models",
+            "@drake_models//:iiwa_description"],
     deps = [
         "//planning/trajectory_optimization:direct_transcription",
         "//common:add_text_logging_gflags",

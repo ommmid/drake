@@ -101,12 +101,12 @@ int main(int argc, char *argv[]) {
 
   // define our geometry source
   // const std::string robot_urdf_filepath{"iiwa14_boxes.urdf"};
-  const char *kModelPath = "bazel-drake/external/drake_models/iiwa_description/"
+  const char *kModelPath = "package://drake_models/iiwa_description/"
                            "urdf/iiwa14_spheres_dense_elbow_collision.urdf";
   const std::string robot_root_link_in_urdf{"base"};
-  const std::string urdf =
-      (!FLAGS_urdf.empty() ? FLAGS_urdf
-                           : drake::FindResourceOrThrow(kModelPath));
+  // const std::string urdf =
+  //     (!FLAGS_urdf.empty() ? FLAGS_urdf
+  //                          : drake::FindResourceOrThrow(kModelPath));
 
   // import robot
   std::vector<ModelInstanceIndex> robot_model_idexes =
