@@ -24,13 +24,15 @@
 #include "drake/systems/analysis/simulator.h"
 #include "drake/systems/framework/diagram.h"
 #include "drake/systems/framework/diagram_builder.h"
+#include "drake/common/unused.h"
+#include <drake/math/rigid_transform.h>
 
 using hr_clock = std::chrono::high_resolution_clock;
 using drake::geometry::GeometrySet;
 using drake::geometry::QueryObject;
 using drake::geometry::SceneGraph;
 using drake::geometry::SignedDistancePair;
-using drake::math::RigidTransform;
+using drake::math::RigidTransformd;
 using drake::multibody::AddMultibodyPlantSceneGraph;
 using drake::multibody::Body;
 using drake::multibody::BodyIndex;
@@ -95,8 +97,7 @@ int main(int argc, char *argv[]) {
   // build the basic drake system
   drake::systems::DiagramBuilder<double> builder;
   // create a scene graph that contains all the geometry of the system.
-  auto [plant, scene_graph] =
-      AddMultibodyPlantSceneGraph(&builder, FLAGS_sim_dt);
+  auto [plant, scene_graph] = AddMultibodyPlantSceneGraph(&builder, FLAGS_sim_dt);
   scene_graph.set_name("scene_graph");
 
   // define our geometry source
@@ -109,12 +110,8 @@ int main(int argc, char *argv[]) {
   //                          : drake::FindResourceOrThrow(kModelPath));
 
   // import robot
-  std::vector<ModelInstanceIndex> robot_model_idexes =
-      Parser(&plant).AddModelsFromUrl(kModelPath);
-      
-  // OMID, is the first one the right modelinstance?
-  ModelInstanceIndex robot_model_idx_ = robot_model_idexes[0];
-
+  ModelInstanceIndex robot_model_idx_ = Parser(&plant).AddModelsFromUrl(kModelPath)[0];
+  
   // obtain vector of Body Indices for each model for the Geometry Sets
   std::vector<BodyIndex> robot_body_indices = plant.GetBodyIndices(robot_model_idx_);
   std::vector<const Body<double> *> robot_bodies;
@@ -127,13 +124,13 @@ int main(int argc, char *argv[]) {
   plant.WeldFrames(plant.world_frame(), child_frame);
 
   // import shelves in the scene
-  // auto parser = Parser(&plant)
-  // std::vector<ModelInstanceIndex> bin = parser.AddModelsFromUrl("file:///home/omid/drake/note/shelves.sdf")[0]
-  // plant.WeldFrames(
-  //     plant.world_frame(),
-  //     plant.GetFrameByName("shelves_body", bin),
-  //     RigidTransform([0.88, 0, 0.4]),
-  // );
+  auto parser = Parser(&plant);
+  ModelInstanceIndex bin = parser.AddModelsFromUrl("file:///home/omid/drake/note/shelves.sdf")[0];
+  auto transform = RigidTransformd(drake::Vector3<double>{0.88, 0, 0.4});
+  auto& shelves = plant.GetFrameByName("shelves_body", bin);
+  drake::unused(transform);
+  drake::unused(shelves);
+  plant.WeldFrames( plant.world_frame(), shelves, transform);
 
   // Now the model is complete.
   plant.Finalize();
@@ -141,33 +138,50 @@ int main(int argc, char *argv[]) {
   auto robot_dof_ = plant.num_positions(robot_model_idx_);
   std::cerr << "RobotCollisionChecker: robot_dof_: " << robot_dof_ << std::endl;
 
+  // Boundary conditions
+  Eigen::VectorXd start_conf = Eigen::VectorXd::Zero(robot_dof_);
+  start_conf << 0.0, 0.40236988, 0.0, -1.36484125, 0.0, -0.1, -M_PI/2;
+  Eigen::VectorXd goal_conf = Eigen::VectorXd::Zero(robot_dof_);
+  goal_conf << 0.0, 0.60544649, 0.0, -1.75551969, 0.0, -0.69582573, -M_PI/2;
+
   // Sanity check on the availability of the optional source id before using it.
   DRAKE_DEMAND(!!plant.get_source_id());
 
   // connect the visualizer and make the context
-  // drake::geometry::ConnectDrakeVisualizer(&builder, scene_graph);
   drake::visualization::AddDefaultVisualization(&builder);
 
-  std::unique_ptr<drake::systems::Diagram<double>> diagram_ = builder.Build();
-  std::unique_ptr<drake::systems::Context<double>> context_ = diagram_->CreateDefaultContext();
-  diagram_->SetDefaultContext(context_.get());
+  auto diagram_ = builder.Build();
+  auto diagram_context = diagram_->CreateDefaultContext();
+  // diagram_->SetDefaultContext(diagram_context.get());
   auto scene_context = scene_graph.AllocateContext();
   auto output = diagram_->AllocateOutput();
 
-  // create a simulator for visualization
-  std::unique_ptr<drake::systems::Simulator<double>> simulator_ =
-      std::make_unique<drake::systems::Simulator<double>>(*diagram_);
-  simulator_->Initialize();
-  drake::systems::Context<double> *plant_context =
-      &diagram_->GetMutableSubsystemContext(plant,
-                                            &simulator_->get_mutable_context());
+  
+  Context<double>* plant_context = &plant.GetMyMutableContextFromRoot(diagram_context.get());
 
   // initialize to a default position (may be in collision)
-  plant.SetPositions(plant_context, robot_model_idx_,
-                     Eigen::VectorXd::Zero(robot_dof_));
-  // simulator_->get_system().Publish(simulator_->get_context());
-  diagram_->ForcedPublish(*context_);
+  plant.SetPositions(plant_context, robot_model_idx_, start_conf);
+  diagram_->ForcedPublish(*diagram_context);
 
+  // should i do it this wya???????????????
+  RevoluteJoint<double>& shoulder =
+      acrobot.GetMutableJointByName<RevoluteJoint>("shoulder");
+  RevoluteJoint<double>& elbow =
+      acrobot.GetMutableJointByName<RevoluteJoint>("elbow");
+
+  // create a simulator for visualization
+  auto simulator = std::make_unique<drake::systems::Simulator<double>>(*diagram_);
+  simulator->set_target_realtime_rate(1.0);
+  simulator->get_mutable_context().SetTime(0.0);
+  simulator->Initialize();
+  simulator->AdvanceTo(10.0);
+  // uncomment to see the robot in initial state
+  while(true){
+    std::this_thread::sleep_for(
+            std::chrono::milliseconds(500));
+  }
+  return 0;
+  
   // setup the OMPL planning problem
   // ompl::msg::noOutputHandler(); // uncomment to remove OMPL messages
 
@@ -188,7 +202,7 @@ int main(int argc, char *argv[]) {
   og::SimpleSetup ss(space_);
   auto si = ss.getSpaceInformation();
   // setup the Validty Checker as a lambda function which returns a bool
-  ss.setStateValidityChecker([&plant, plant_context, &simulator_,
+  ss.setStateValidityChecker([&plant, plant_context, &simulator,
                               &robot_model_idx_, &robot_dof_,
                               &FLAGS_collision_tolerance]
                               (const ob::State *state) {
@@ -202,16 +216,14 @@ int main(int argc, char *argv[]) {
           "Either the plant geometry_query_input_port() is not properly "
           "connected to the SceneGraph's output port, or the plant_context is "
           "incorrect. Please refer to AddMultibodyPlantSceneGraph on "
-          "connecting "
-          "MultibodyPlant to SceneGraph.");
+          "connecting MultibodyPlant to SceneGraph.");
     }
     const auto &query_object =
         query_port.Eval<QueryObject<double>>(*plant_context);
 
     // method is based on https://github.com/RobotLocomotion/drake/issues/11580
     std::vector<SignedDistancePair<double>> signed_distance_pairs =
-        query_object.ComputeSignedDistancePairwiseClosestPoints(
-            FLAGS_max_distance);
+                      query_object.ComputeSignedDistancePairwiseClosestPoints(FLAGS_max_distance);
 
     bool is_collision_free = true; // return value
     for (const auto &signed_distance_pair : signed_distance_pairs) {
@@ -229,19 +241,13 @@ int main(int argc, char *argv[]) {
     }
     return is_collision_free;
   });
+
   // further setup the OMPL planning specifications
-  ss.getSpaceInformation()->setStateValidityCheckingResolution(
-      FLAGS_discretization);
+  ss.getSpaceInformation()->setStateValidityCheckingResolution(FLAGS_discretization);
+
   // set the desired planner
   ss.setPlanner(std::make_shared<og::RRTConnect>(si)); // InformedRRTstar
   auto t_finished_setup = hr_clock::now();
-
-  // define the states between which to compute a trajectory
-  Eigen::VectorXd start_conf = Eigen::VectorXd::Zero(robot_dof_);
-  start_conf << 0.391309, 1.19062, 0.891649, -0.863306, 0.694499, 0.512097, 0;
-  Eigen::VectorXd goal_conf = Eigen::VectorXd::Zero(robot_dof_);
-  goal_conf << -0.391345, -1.19056, -0.891491, 0.863343, -0.694777, -0.512052,
-      0;
 
   ompl::base::ScopedState<> start(space_);
   start = eigen_to_vec(start_conf); // dru::e_to_v(start_conf);
@@ -288,8 +294,7 @@ int main(int argc, char *argv[]) {
     for (size_t ii = 0; ii < 2; ii++) {
       for (const auto &conf : trajectory) {
         plant.SetPositions(plant_context, robot_model_idx_, conf);
-        // simulator_->get_system().Publish(simulator_->get_context());
-        diagram_->ForcedPublish(*context_);
+        diagram_->ForcedPublish(*diagram_context);
         std::this_thread::sleep_for(
             std::chrono::milliseconds(FLAGS_pause_msec));
       }
