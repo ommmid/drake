@@ -12,6 +12,9 @@
 #include "drake/systems/primitives/affine_system.h"
 #include "drake/visualization/visualization_config_functions.h"
 
+#include <ompl/config.h>
+#include <ompl/base/StateSpace.h>
+
 #include <iostream>
 #include "drake/examples/multibody/acrobot/fb_cancellation_controller.h"
 #include "drake/common/drake_path.h"

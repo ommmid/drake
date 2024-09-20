@@ -1,0 +1,6 @@
+cc_library(
+    name = "ompl-1.5",
+    hdrs = glob(["**/*.h"]),
+    includes = ["."], # relative to path given in new_local_repository
+    visibility = ["//visibility:public"],
+)

@@ -29,3 +29,12 @@ versions.check(minimum_bazel_version = "6.0")
 load("@rules_rust//crate_universe:repositories.bzl", "crate_universe_dependencies")  # noqa
 
 crate_universe_dependencies(bootstrap = True)
+
+
+new_local_repository(
+    name = "ompl",
+    build_file = "//third_party:ompl.BUILD.bazel",
+    path = "/usr/include/ompl-1.5",
+)
+
+# bazel fetch @cereal//:cereal-lib

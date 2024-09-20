@@ -3,6 +3,9 @@
 Sampling method example
 PRM
 RRT
+`/home/omid/manipulation/manipulation/exercises/trajectories/rrt_planner/rrt_planning.py`
+example of it is at:
+`/home/omid/manipulation/book/trajectories/exercises/rrt_planning.ipynb`
 
 TrajOpt example
 directiontranscription
@@ -15,7 +18,7 @@ example for
 constraint in cartesian space
 
 example
-Redundnat Manipulator
+Redundnat Manipulator: seconday objective
 
 ## inspecting kinematic tree
 `manipulation/book/pick/kinematic_tree.ipynb`

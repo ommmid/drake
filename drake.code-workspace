@@ -1,0 +1,35 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"path": "../underactuated"
+		},
+		{
+			"path": "../manipulation"
+		}
+	],
+	"settings": {
+		"files.associations": {
+			"random": "cpp",
+			"*.ipp": "cpp",
+			"*.inc": "cpp",
+			"array": "cpp",
+			"*.tcc": "cpp",
+			"memory": "cpp",
+			"future": "cpp",
+			"istream": "cpp",
+			"functional": "cpp",
+			"tuple": "cpp",
+			"utility": "cpp",
+			"variant": "cpp",
+			"*.txx": "cpp",
+			"typeindex": "cpp",
+			"typeinfo": "cpp",
+			"cmath": "cpp",
+			"complex": "cpp",
+			"chrono": "cpp"
+		}
+	}
+}

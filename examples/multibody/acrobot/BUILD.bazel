@@ -76,6 +76,7 @@ drake_cc_binary(
     srcs = ["run_fb_cancellation.cc"],
     data = ["//multibody/benchmarks/acrobot:models"],
     deps = [
+        "@ompl//:ompl-1.5",
         ":fb_cancellation_controller",
         "//common:add_text_logging_gflags",
         "//geometry:drake_visualizer",

@@ -12,3 +12,7 @@ add_lint_tests(
         "com_github_bazelbuild_rules_cc/whole_archive.bzl",
     ],
 )
+
+exports_files = [
+    "ompl.BUILD.bazel",
+]
