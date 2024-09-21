@@ -1,5 +1,6 @@
 /// @file drake_ompl_demo.cc
 // @author: David M.S. Johnson <dave@dexai.com>
+// https://github.com/DexaiRobotics/drake-torch/blob/master/examples/drake-ompl/src/drake_ompl_demo.cc
 
 #include <chrono>
 #include <iostream>
@@ -66,7 +67,7 @@ DEFINE_double(simplify_time, 10.0,
 DEFINE_int32(pause_msec, 150,
              "Determines Playback speed. Time to pause between displaying each "
              "solution state in msec.");
-DEFINE_int32(cycles_to_display, 100,
+DEFINE_int32(cycles_to_display, 1,
              "Determines how long the solution is played back. Each cycle is "
              "num_interpolated_states * pause_msec * 2 /1000 seconds long.");
 DEFINE_int32(num_interpolated_states, 50,
@@ -125,6 +126,12 @@ int main(int argc, char *argv[]) {
       plant.GetFrameByName(robot_root_link_in_urdf, robot_model_idx_);
   plant.WeldFrames(plant.world_frame(), child_frame);
 
+  // add gripper to plant and return modelinstance
+   const std::string wsg_model_path_ =  "package://drake_models/"
+                                        "wsg_50_description/sdf/schunk_wsg_50.sdf"; 
+  const ModelInstanceIndex wsg_instance =
+        Parser(plant).AddModels(wsg_model_path_).at(0);
+
   // import shelves in the scene
   auto parser = Parser(&plant);
   ModelInstanceIndex bin = parser.AddModelsFromUrl("file:///home/omid/drake/note/shelves.sdf")[0];
@@ -161,13 +168,10 @@ int main(int argc, char *argv[]) {
   // auto scene_context = scene_graph.AllocateContext();
   // auto output = diagram_->AllocateOutput();
 
-  
-  // Context<double>* plant_context = &plant.GetMyMutableContextFromRoot(&diagram_context);
-  Context<double>& plant_context = diagram_->GetMutableSubsystemContext(plant, &diagram_context);
+  Context<double>& plant_context = plant.GetMyMutableContextFromRoot(&diagram_context);
+  // Context<double>& plant_context = diagram_->GetMutableSubsystemContext(plant, &diagram_context);
   drake::unused(plant_context);
   drake::unused(t_begin);
-
-  
 
   // initialize to a default position (may be in collision)
   plant.SetPositions(&plant_context, start_conf);
@@ -192,12 +196,12 @@ int main(int argc, char *argv[]) {
 
   // Dont run simulation here, we jut want to see the robot at the given configuration, that is it.
   // uncomment to see the robot in initial state
-  while(true){
-    std::this_thread::sleep_for(
-            std::chrono::milliseconds(500));
-  }
-  return 0;
-  /*
+  // while(true){
+  //   std::this_thread::sleep_for(
+  //           std::chrono::milliseconds(500));
+  // }
+  // return 0;
+  
   // setup the OMPL planning problem
   // ompl::msg::noOutputHandler(); // uncomment to remove OMPL messages
 
@@ -218,15 +222,15 @@ int main(int argc, char *argv[]) {
   og::SimpleSetup ss(space_);
   auto si = ss.getSpaceInformation();
   // setup the Validty Checker as a lambda function which returns a bool
-  ss.setStateValidityChecker([&plant, plant_context, &simulator,
-                              &robot_model_idx_, &robot_dof_,
+  ss.setStateValidityChecker([&plant, &plant_context, &simulator,
+                              &robot_dof_,
                               &FLAGS_collision_tolerance]
                               (const ob::State *state) {
     auto next_conf = OMPLStateToEigen(state, robot_dof_); // copy
-    plant.SetPositions(plant_context, robot_model_idx_, next_conf);
+    plant.SetPositions(&plant_context, next_conf);
     // Query port & object used to find out results from scene graph
     const auto &query_port = plant.get_geometry_query_input_port();
-    if (!query_port.HasValue(*plant_context)) {
+    if (!query_port.HasValue(plant_context)) {
       throw std::invalid_argument(
           "Cannot get a valid geometry::QueryObject. "
           "Either the plant geometry_query_input_port() is not properly "
@@ -235,7 +239,7 @@ int main(int argc, char *argv[]) {
           "connecting MultibodyPlant to SceneGraph.");
     }
     const auto &query_object =
-        query_port.Eval<QueryObject<double>>(*plant_context);
+        query_port.Eval<QueryObject<double>>(plant_context);
 
     // method is based on https://github.com/RobotLocomotion/drake/issues/11580
     std::vector<SignedDistancePair<double>> signed_distance_pairs =
@@ -309,8 +313,8 @@ int main(int argc, char *argv[]) {
   while (num_cycles < static_cast<size_t>(FLAGS_cycles_to_display)) {
     for (size_t ii = 0; ii < 2; ii++) {
       for (const auto &conf : trajectory) {
-        plant.SetPositions(plant_context, robot_model_idx_, conf);
-        diagram_->ForcedPublish(*diagram_context);
+        plant.SetPositions(&plant_context, robot_model_idx_, conf);
+        diagram_->ForcedPublish(diagram_context);
         std::this_thread::sleep_for(
             std::chrono::milliseconds(FLAGS_pause_msec));
       }
@@ -321,5 +325,4 @@ int main(int argc, char *argv[]) {
 
   std::cerr << "Planning Complete!" << std::endl;
   return 0;
-  */
 }
