@@ -81,7 +81,7 @@ Direct transcription is well-defined for both discrete- and continuous- time.
 
 Direct transcription and collocation are not suitable for contact and collision check
 
-The default solver would again be the SQP-solver, SNOPT.
+The default solver is the SQP-solver, SNOPT.
 
 some good examples:
 https://github.com/vincekurtz/drake_ddp/blob/b4b22a55448121153f992cae453236f7f5891b23/acrobot.py#L177 
@@ -96,7 +96,7 @@ There was an effort in Drake to use OMPL but it did not go anywhere
 in drake language, mathematical programs is the same is calling optimization methods
 ```
 prog = MathematicalProgram()
-x = prog.NewContinousVariables(2)
+x = prog.NewContinuousVariables(2)
 prog.AddConstraint(x[0]+x[1] == 1)
 prog.AddConstraint(x[0] <= x[1])
 prog.AddCost(x[0] ** 2 + x[1] ** 2)
