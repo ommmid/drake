@@ -65,6 +65,9 @@ trajectory optimiztion:
     and bunch of constraints which includes system dynamics
     not good when we need contact or collision (things from GraphScene)
 
+    - shooting: its like direct transcription but we remove the state from decision variables, we 
+    can have single shooting or multiple shooting
+
     - direct collocation. like direct transcription but uses cubic spline to reprent the path, so we can define less control points
     resuling in less variables. 
     `underactuated/book/trajopt/double_integrator.ipynb`
@@ -73,7 +76,7 @@ trajectory optimiztion:
     - kinematics trajectory optimization:
     This is an extension of prvious IK approach but we are going to solve for a handful of points not one point. This is a kinda of DirectCollocation but without dynamics
     `manipulation/book/trajectories/kinematic_trajectory_optimization.ipynb`
-    Drake uses B-spline which has the convex hull property to ensure that limits on the joint positions and any of its **derivatives** are satisfied. Note this is used in the optimiztion process not after calculating the path. Kinematics here does not mean that we do not set time derivative constraint but it means we do not have the dynanmics equations in the equality constraint like DirecCallocaiton or DirectTranscription have.
+    Drake uses B-spline which has the convex hull property to ensure that limits on the joint positions and any of its **derivatives** are satisfied. Note this is used in the optimiztion process not after calculating the path. Kinematics here does not mean that we do not set time derivative constraint but it means we do not have the dynanmics equations in the equality constraint like DirecCallocaiton or DirectTranscription have. Also, decision variables includes only q compare that with [q, qdot] and u (input) in dynamics optimization
 
 Collocation is an idea about gradients of a continuous trajectory. It is only a relevant idea for continuous-time systems.
 
@@ -91,6 +94,43 @@ PRM (multiple enquery): roadmap construction, offline. graph search (online)
 RRT (singel enquery)
 
 There was an effort in Drake to use OMPL but it did not go anywhere
+
+## Trajectory Generation
+Time parameterize a path from (motion planning) so we can execcute that plan subject to velocity, 
+acceleration and torque-limit constraint
+
+**Trapezoidal** velocity and trpezoidal acceleation are two common methods.
+
+<!-- ![left: trapezoidal velocity trajectory, right: trapezoidal acceleration trajecotyr from Ruckig](./share/trapez.png) -->
+<figure>
+<img src="./share/trapez.png" width=800 >
+<figcaption>left: trapezoidal velocity trajectory, right: trapezoidal acceleration trajecotyr from Ruckig</figcaption>
+</figure>
+
+We also could use **polynomials** of 3rd order or 5th roder. They are easy  to fit differentiable and continous. _Minimum jerk_ and _minimum snap_ trajectories are the polynomial  trajectories that minimizes jerk or snap.   
+in trapezoidal profiles approach, we had hard constraints on following those trapezoids but in polynomial we made it loose. There is not guarantee that joints limits are satisfied between control points of the polynomials.      
+
+**B-spline** is the approach to go becuse it gaurantees that the intermidiates poitns between control points stay in the convex hull and their derivaties do not overshoot. The tradeoff is that B-spline may not pass through all the control points (first and the last is guaranteed though)
+
+**Time-optimal Trajectory Generation** (TOTG) is another method which attempts to alternate between max acceleration and deceleration (bang-bang)
+
+In drake you could use `PathParameterizedTrajectory` to do these stuff
+
+## Model Predictive Control
+
+Its a dynamic trajectory optimiztion problem in a loop. With horizon cost and the final cost.
+Horizon cost minimized the error between current and a reference trajectory. 
+Also we could add min of the input control
+Final cost, is termination time.
+Decision variables: state and input
+
+We also want a linear dynamic system, because we are solving this in a control loop and we need
+fast response.
+
+
+A good approach that Boston Dynamics uses is to divide the trajectory optimization into two parts:
+Offline and Online.
+
 
 ## Optimization
 in drake language, mathematical programs is the same is calling optimization methods
