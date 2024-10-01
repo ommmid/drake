@@ -129,7 +129,19 @@ fast response.
 
 
 A good approach that Boston Dynamics uses is to divide the trajectory optimization into two parts:
-Offline and Online.
+Offline and Online.         
+Offline: we do the heavy nonlinear trajectory optimization with all the constraints. This will be a template representing a behavious. They have a library of these behaviours. 
+
+Online: Then for a given problem a behavior is selected. Then MPC is being used for the same problem but adapting the offline solution for the current environment.
+
+The result of the offline step ($x_{TO}, u_{TO}$) is used in the running cost function as a reference but in a soft constriant manner. Also, the terminal/final cost includes the start and goal.
+
+<img src="./share/onlilne_mpc.png" width=600>
+
+<figure>
+<img src="./share/formula.png" width=600>
+<figcaption>Offline motion libraries and online MPC for advanced mobility skills by Marko Bjelonic et al </figcaption>
+</figure>
 
 
 ## Optimization
