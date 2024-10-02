@@ -116,33 +116,6 @@ in trapezoidal profiles approach, we had hard constraints on following those tra
 
 In drake you could use `PathParameterizedTrajectory` to do these stuff
 
-## Model Predictive Control
-
-Its a dynamic trajectory optimiztion problem in a loop. With horizon cost and the final cost.
-Horizon cost minimized the error between current and a reference trajectory. 
-Also we could add min of the input control
-Final cost, is termination time.
-Decision variables: state and input
-
-We also want a linear dynamic system, because we are solving this in a control loop and we need
-fast response.
-
-
-A good approach that Boston Dynamics uses is to divide the trajectory optimization into two parts:
-Offline and Online.         
-Offline: we do the heavy nonlinear trajectory optimization with all the constraints. This will be a template representing a behavious. They have a library of these behaviours. 
-
-Online: Then for a given problem a behavior is selected. Then MPC is being used for the same problem but adapting the offline solution for the current environment.
-
-The result of the offline step ($x_{TO}, u_{TO}$) is used in the running cost function as a reference but in a soft constriant manner. Also, the terminal/final cost includes the start and goal.
-
-<img src="./share/onlilne_mpc.png" width=600>
-
-<figure>
-<img src="./share/formula.png" width=600>
-<figcaption>Offline motion libraries and online MPC for advanced mobility skills by Marko Bjelonic et al </figcaption>
-</figure>
-
 
 ## Optimization
 in drake language, mathematical programs is the same is calling optimization methods
