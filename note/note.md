@@ -44,8 +44,7 @@ to joint tells you that it can not. We are using first order derivative (jacobia
 second order derivative that exists, the acceleration.
 
 ## IK
-solve IK as a constrained optimization. Instead of using velocity and jacobian, we solve for solution that is close 
-to the current configuration with forward kinematics being teh constraint
+solve IK as a constrained optimization. Instead of using velocity and jacobian, we solve for solution that is close to the current configuration with forward kinematics being the constraint
 `https://manipulation.csail.mit.edu/trajectories.html#:~:text=IK%20as%20constrained%20optimization`
 In the ipynb, we see the jumps to the next position for that. No command sent to the joints controller, it is just
 changing the configureation of the robot. In this Ik optimization, we might find other solutions, of the IK but in diff IK (the jacobian one), we always find one that is closest to the current one. 
@@ -89,6 +88,20 @@ The default solver is the SQP-solver, SNOPT.
 some good examples:
 https://github.com/vincekurtz/drake_ddp/blob/b4b22a55448121153f992cae453236f7f5891b23/acrobot.py#L177 
 
+Some other trajectory optimization methods that got attention:         
+**CHOMP**: gradient based while satifsying collision            
+**STOMP**: gradient free that relies on generting noisy trajectories            
+**TrajOpt**: it does a Sequentation Quadratic Programming. We need to have the objective funciont and the constraint ready to go for a QP at each sequence. Objective function is min distance. Two things:
+- they use trust region to find the right region for approximation to QP            
+- convert constraints into penalty terms in cost function. To do that, they use $l_1$ penalty (like absolute value). This penalty is called exact penatly because, with a high enough weight, it will converge to zero like the constraint is being satisifed completely. This is not true for $l_2$ penalty where the norm 2 is used. 
+- to smooth these $l_1$ terms, they use slack varialbes         
+- They linearize the signe distance function, so we can easily add them to the cost function of the QP
+- They use Bullet because it can find convex-convext collision check (GJK method). FCL finds all the contact points but Bullet find the deepest penetration.
+
+
+
+You can add constraint in joint space or Cartesian space. Also, you can add each of them for different segment of the trajectory.
+
 ## Motion planning - sampling based
 PRM (multiple enquery): roadmap construction, offline. graph search (online)
 RRT (singel enquery)
@@ -127,6 +140,11 @@ prog.AddConstraint(x[0] <= x[1])
 prog.AddCost(x[0] ** 2 + x[1] ** 2)
 result = Solve(prog)
 ```
+## SQP
+sequential quadratic programming:
+Uses a lagrange multiplier to combine the equality and inequality constraints into cost function as penalty t erms. SQP alrogithm uses Newton's method, the one for optimization method not root finding, thus second order derivative is needed. But that means they can convert the problem into quadratic cost function locally.
+
+Wikipedia has really good clear explanation: https://optimization.cbe.cornell.edu/index.php?title=Sequential_quadratic_programming
 
 ## BAZEL
 bazel fetch @ompl//:ompl-1.5
