@@ -148,3 +148,10 @@ Wikipedia has really good clear explanation: https://optimization.cbe.cornell.ed
 
 ## BAZEL
 bazel fetch @ompl//:ompl-1.5
+
+## Polytope
+when a polytope has dimension n=3 we say it is a polygedron     
+when a polytope has dimension n=2 we say it is a plygon     
+polytope in general has dimension n     
+
+<img src="./share/poly.png" width=400>
