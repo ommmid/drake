@@ -89,18 +89,21 @@ some good examples:
 https://github.com/vincekurtz/drake_ddp/blob/b4b22a55448121153f992cae453236f7f5891b23/acrobot.py#L177 
 
 Some other trajectory optimization methods that got attention:         
-**CHOMP**: gradient based while satifsying collision            
+**CHOMP**: projected gradient descent which satifsying collision            
 **STOMP**: gradient free that relies on generting noisy trajectories            
-**TrajOpt**: it does a Sequentation Quadratic Programming. We need to have the objective funciont and the constraint ready to go for a QP at each sequence. Objective function is min distance. Two things:
+**TrajOpt**: it does a Sequentation Quadratic Programming. We need to have the objective function and the constraint ready to go for a QP at each sequence. Objective function is min distance. Two things:
 - they use trust region to find the right region for approximation to QP            
-- convert constraints into penalty terms in cost function. To do that, they use $l_1$ penalty (like absolute value). This penalty is called exact penatly because, with a high enough weight, it will converge to zero like the constraint is being satisifed completely. This is not true for $l_2$ penalty where the norm 2 is used. 
+- convert constraints into penalty terms in cost function. To do that, they use $l_1$ penalty (like absolute value). This penalty is called exact penatly because, with a high enough weight, it will converge to zero like the constraint is being satisifed completely. This is not true for $l_2$ penalty where the norm 2 is used. Equality constratin become like absolute value penalty and inequality constraint are basically Relu function $max(x,0)$ 
 - to smooth these $l_1$ terms, they use slack varialbes         
 - They linearize the signe distance function, so we can easily add them to the cost function of the QP
 - They use Bullet because it can find convex-convext collision check (GJK method). FCL finds all the contact points but Bullet find the deepest penetration.
+- You can add constraint in joint space or Cartesian space. Also, you can add each of them for different segment of the trajectory.     
 
+distance fields vs convex-convex collision check:       
+distane feild is a pre-computed function on a voxel  grid that specifies the distance to the nearest collision. The advantage is the collision check is constatn time. whereas convex-convex colision detection takes two shapes and computes minimal translation to get them out of collision or make them collide. The distance field is merely on points or sphere on the robot while convex-convex detection is the convext shape of each link of the robot. CHOMP uses distance field and trajopt uses convex-convex collision check        
 
-
-You can add constraint in joint space or Cartesian space. Also, you can add each of them for different segment of the trajectory.
+SQP vs project gradient descent:        
+CHOMP uses projected gradient descent where at each step the joint values are projected to the constrained space to make sure constraint are satsiftied at each step. This is cheaper than solving QP (like trajopt does) but gradient descent does not take into account the second derivative
 
 ## Motion planning - sampling based
 PRM (multiple enquery): roadmap construction, offline. graph search (online)
